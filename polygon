@@ -1,0 +1,188 @@
+
+import numpy as np
+import math
+
+#Reading file
+fil = open("q1_input.txt", "r")
+content = fil.read()
+fil.close()
+
+#Seperating polygons passages and line segments
+content = content.split("\n\n")
+
+#All of Polygons
+polygons = content[0]
+polygons = polygons.split("\n")
+#All of Passages
+passages = content[1]
+passages = passages.split("\n")
+#All of Line Segments
+lineSegments = content[2]
+lineSegments = lineSegments.split("\n")
+lineSegments.pop(len(lineSegments)-1)
+
+#ALGORITHM DETERMINING WHETHER A POINT IS IN A POLYGON OR NOT
+def rayCastingAlgorithm(point, polygon):
+
+    intersections = 0
+    xPoint = float(point[0])
+    yPoint = float(point[1])
+
+    for i in range(len(polygon)):
+        
+        firstPoint = polygon[i]
+        firstPoint = firstPoint.split(",")
+
+        firstX = float(firstPoint[0])
+        firstY = float(firstPoint[1])
+
+        if i == (len(polygon) - 1):    
+            secondPoint = polygon[0]
+            secondPoint = secondPoint.split(",")
+        else:
+            secondPoint = polygon[i+1]
+            secondPoint = secondPoint.split(",")
+
+        secondX = float(secondPoint[0])
+        secondY = float(secondPoint[1])
+        
+        if ((min(firstY, secondY) < yPoint) & (yPoint <= max(firstY, secondY)) & (xPoint < min(firstX, secondX))):
+            intersections = intersections + 1
+
+    if (intersections % 2) == 1:
+       return True
+
+    return False 
+
+#Function to calculate the distance between two points
+def distanceBetween2Points(point1, point2):
+    
+    x1 = float(point1[0])
+    y1 = float(point1[1])
+
+    x2 = float(point2[0])
+    y2 = float(point2[1])
+
+    distance = math.sqrt((x1-x2) * (x1-x2) + (y1-y2) * (y1-y2))
+
+    return distance
+
+#Function computing the slope of a line
+def slope(x1, y1, x2, y2):
+
+    if ( x1 != x2):
+        slope = (y2 - y1) / (x2 - x1)
+        return slope
+    
+    return "INFINITE!!!!"
+
+#ALGORITHM TO DETERMINE WHETHER A LINE INTERSECTS A PASSAGE OR NOT
+def isPassable(line, passage):
+        
+    firstPassagePoint = passage[0]
+    firstPassagePoint = firstPassagePoint.split(",")
+    x1Passage = float(firstPassagePoint[0])
+    y1Passage = float(firstPassagePoint[1])
+
+    secondPassagePoint = passage[1]
+    secondPassagePoint = secondPassagePoint.split(",")
+    x2Passage = float(secondPassagePoint[0])
+    y2Passage = float(secondPassagePoint[1])
+
+    firstLinePoint = line[0]
+    firstLinePoint = firstLinePoint.split(",")
+    x1Line = float(firstLinePoint[0])
+    y1Line = float(firstLinePoint[1])
+
+    secondLinePoint = line[1]
+    secondLinePoint = secondLinePoint.split(",")
+    x2Line = float(secondLinePoint[0])
+    y2Line = float(secondLinePoint[1])
+
+    slopeOfLine = slope(x1Line, y1Line, x2Line, y2Line)
+    slopeOfPassage = slope(x1Passage, y1Passage, x2Passage, y2Passage)
+
+    if slopeOfLine == slopeOfPassage:
+        return False  
+
+    elif  (max(x1Passage, x2Passage) <= min(x1Line, x2Line)) | (max(x1Line, x2Line) <= min(x1Passage, x2Passage)):  
+        return False
+    
+    elif  (max(y1Passage, y2Passage) <= min(y1Line, y2Line)) | (max(y1Line, y2Line) <= min(y1Passage, y2Passage)):  
+        return False 
+
+    return True
+
+
+#Code
+status = []
+greatStatus = []
+isPassed = False
+for line in lineSegments:
+    line = line.split(";")
+    
+    point1 = line[0]
+    point1 = point1.split(",")
+    
+    point2 = line[1]
+    point2 = point2.split(",")
+
+    for passage in passages:
+        passage = passage.split(";")
+
+        passCond = isPassable(line, passage)
+
+        if passCond == True:
+            isPassed = True
+
+    distance = distanceBetween2Points(point1, point2)
+
+    insideAPolygon1 = False
+    insideAPolygon2 = False
+     
+    for polygon in polygons:
+    
+        polygon = polygon.split(";")
+        
+        cond1 = rayCastingAlgorithm(point1, polygon)
+        cond2 = rayCastingAlgorithm(point2, polygon)
+
+        if (cond1 == True) & (cond2 == True):
+            status.append(1)
+
+        if cond1 == True:
+            insideAPolygon1 = True
+        
+        if cond2 == True:
+            insideAPolygon2 = True
+        
+
+    if (insideAPolygon1 == False) | (insideAPolygon2 == False):
+         greatStatus.append("0 \n")   
+    elif ((len(status) == 1) & (distance <= 1)) | ((distance <= 1) & (isPassed == True)):
+        greatStatus.append("1 \n")
+    else:
+        greatStatus.append("0 \n")
+    
+    status = []
+    isPassed = False
+
+#Writing to another file named q1Outputs.txt
+q1File = open("q1Outputs.txt", "w")
+q1File.writelines(greatStatus)
+q1File.close()
+
+q1File = open("q1Outputs.txt", "r")
+print(q1File.read())
+q1File.close()
+
+
+
+
+
+
+
+
+
+
+
